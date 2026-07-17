@@ -87,3 +87,8 @@ htmlcov/
 # IDE Generated
 .vscode/settings.json
 .vscode/launch.json
+
+# Txt file
+deploy.txt
+report.txt
+instruction.txt
