@@ -49,8 +49,8 @@ const [analysisResult, setAnalysisResult] = useState<any>(null);
       // it's appended as a query parameter. This allows the backend to decide
       // whether to perform the GitHub validation step.
       const endpoint = githubUsername
-        ? `http://127.0.0.1:8000/api/v1/resume/parse?github_username=${encodeURIComponent(githubUsername)}`
-        : "http://127.0.0.1:8000/api/v1/resume/parse";
+        ? `https://devcred-backend-wvpm.onrender.com/api/v1/resume/parse?github_username=${encodeURIComponent(githubUsername)}`
+        : "https://devcred-backend-wvpm.onrender.com/api/v1/resume/parse";
 
       // The 'fetch' pipeline sends the asynchronous POST request to the backend.
       // The 'body' of the request is our 'formData' object, which contains the
