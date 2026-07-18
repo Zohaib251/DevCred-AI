@@ -6,9 +6,9 @@ export default {
   ],
   theme: {
     extend: {
-      colors: {
-        primary: { 500: "#0ea5e9", 600: "#0284c7", 700: "#0369a1" },
-        dark: { 900: "#0f172a", 800: "#1e293b" },
+      fontFamily: {
+        sans: ['Poppins', 'sans-serif'],
+        mono: ['Roboto Mono', 'monospace'],
       },
     },
   },

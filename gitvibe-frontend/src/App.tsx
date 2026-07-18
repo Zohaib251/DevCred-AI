@@ -1,28 +1,30 @@
 import { useState } from "react";
-import { Upload, Zap } from "lucide-react";
+
+// SVGs for the new icon system, replacing Lucide icons.
+const ZapIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
+    <path d="M7 2v11h3v9l7-12h-4l4-8H7z" />
+  </svg>
+);
+
+const UploadIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
+    <path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z" />
+  </svg>
+);
+
+const GitHubIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
+    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v 3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+  </svg>
+);
+
 
 export default function App() {
-  // The 'useState' hooks are the foundation of this component's interactivity.
-// Each one tracks a piece of the UI's state, and updating them will
-// trigger React to re-render the component with the new values.
-
-// Tracks the resume file selected by the user from their local machine.
-// It's null by default and gets updated when a file is chosen.
-const [resumeFile, setResumeFile] = useState<File | null>(null);
-
-// Holds the GitHub username input by the user. This is an optional
-// field used for project validation.
-const [githubUsername, setGithubUsername] = useState<string>("");
-
-// A boolean flag to manage the loading state of the API call. When true,
-// the UI will show a loading spinner and disable the "Analyze" button
-// to prevent multiple submissions.
-const [isLoading, setIsLoading] = useState<boolean>(false);
-
-// Stores the JSON response from the backend API after a successful analysis.
-// It's null initially, and when it's populated, the UI conditionally
-// renders the results in data cards.
-const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [githubUsername, setGithubUsername] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -39,23 +41,13 @@ const [analysisResult, setAnalysisResult] = useState<any>(null);
 
     setIsLoading(true);
     try {
-      // The native web 'FormData' API is used to construct a payload suitable
-      // for file uploads. We append the resume file under the key "file", which
-      // the backend server expects to find in the multipart/form-data request.
       const formData = new FormData();
       formData.append("file", resumeFile);
 
-      // Dynamically construct the API endpoint. If a GitHub username is provided,
-      // it's appended as a query parameter. This allows the backend to decide
-      // whether to perform the GitHub validation step.
       const endpoint = githubUsername
         ? `https://devcred-backend-wvpm.onrender.com/api/v1/resume/parse?github_username=${encodeURIComponent(githubUsername)}`
         : "https://devcred-backend-wvpm.onrender.com/api/v1/resume/parse";
 
-      // The 'fetch' pipeline sends the asynchronous POST request to the backend.
-      // The 'body' of the request is our 'formData' object, which contains the
-      // binary data of the resume file. The browser handles the complex details
-      // of streaming this data across the local port to the server.
       const response = await fetch(endpoint, {
         method: "POST",
         body: formData,
@@ -65,9 +57,6 @@ const [analysisResult, setAnalysisResult] = useState<any>(null);
         throw new Error(`API error: ${response.statusText}`);
       }
 
-      // Once the analysis is complete, the backend sends back a JSON response,
-      // which we parse and then store in our component's state, triggering a re-render
-      // to display the new data.
       const result = await response.json();
       setAnalysisResult(result);
     } catch (error) {
@@ -79,17 +68,17 @@ const [analysisResult, setAnalysisResult] = useState<any>(null);
   };
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-gray-50 font-sans">
       {/* Header Banner */}
-      <header className="border-b border-slate-800 bg-slate-950 backdrop-blur sticky top-0 z-50">
-        <div className="mx-auto max-w-7xl px-6 py-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Zap className="w-8 h-8 text-blue-500" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent">
+      <header className="border-b border-gray-200 bg-white sticky top-0 z-50">
+        <div className="mx-auto max-w-7xl px-6 py-5">
+          <div className="flex items-center gap-3">
+            <ZapIcon className="w-6 h-6 text-gray-900" />
+            <h1 className="text-2xl font-semibold text-gray-900">
               DevCred AI
             </h1>
           </div>
-          <p className="text-slate-400 text-sm">
+          <p className="text-gray-500 text-sm mt-1">
             Authenticate your resume and validate your GitHub projects in real-time
           </p>
         </div>
@@ -100,28 +89,28 @@ const [analysisResult, setAnalysisResult] = useState<any>(null);
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Left Panel: Profile Assessment Form */}
           <div className="lg:col-span-4">
-            <div className="rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-6 sticky top-32">
+            <div className="border border-gray-200 bg-white p-6 space-y-6 sticky top-32">
               {/* Form Header */}
               <div>
-                <h2 className="text-2xl font-semibold text-white">
+                <h2 className="text-xl font-semibold text-gray-900">
                   Profile Assessment
                 </h2>
-                <p className="text-slate-400 text-sm mt-1">
+                <p className="text-gray-500 text-sm mt-1">
                   Upload your resume and validate projects
                 </p>
               </div>
 
               {/* File Upload */}
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-slate-200">
+                <label className="block text-sm font-medium text-gray-900">
                   Resume File
                 </label>
-                <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-700 bg-slate-950 p-8 transition hover:border-blue-500 hover:bg-slate-900/50">
-                  <Upload className="w-6 h-6 text-slate-400 mb-3" />
-                  <span className="text-sm font-medium text-slate-200">
+                <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 p-8 transition hover:border-gray-400">
+                  <UploadIcon className="w-6 h-6 text-gray-400 mb-3" />
+                  <span className="text-sm font-medium text-gray-800">
                     Click to upload
                   </span>
-                  <span className="text-xs text-slate-500 mt-1">
+                  <span className="text-xs text-gray-500 mt-1">
                     {resumeFile ? resumeFile.name : "PDF or DOCX"}
                   </span>
                   <input
@@ -135,26 +124,20 @@ const [analysisResult, setAnalysisResult] = useState<any>(null);
 
               {/* GitHub Username Input */}
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-slate-200">
+                <label className="block text-sm font-medium text-gray-900">
                   GitHub Username
                 </label>
-                <div className="flex items-center gap-3 rounded-lg bg-slate-950 border border-slate-800 px-4 py-3 transition focus-within:border-blue-500">
-                  <svg
-                    className="w-4 h-4 text-slate-400 flex-shrink-0"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v 3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-                  </svg>
+                <div className="flex items-center gap-3 rounded-md bg-white border border-gray-200 px-4 py-3 transition focus-within:border-gray-900">
+                  <GitHubIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
                   <input
                     type="text"
                     placeholder="e.g., torvalds"
                     value={githubUsername}
                     onChange={(e) => setGithubUsername(e.target.value)}
-                    className="flex-1 bg-transparent text-white placeholder-slate-500 outline-none"
+                    className="flex-1 bg-transparent text-gray-900 placeholder-gray-400 outline-none text-sm"
                   />
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-gray-500">
                   Leave empty to skip GitHub validation
                 </p>
               </div>
@@ -163,7 +146,7 @@ const [analysisResult, setAnalysisResult] = useState<any>(null);
               <button
                 onClick={handleAnalyze}
                 disabled={!resumeFile || isLoading}
-                className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 font-semibold text-white transition hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-blue-500/25"
+                className="w-full rounded-md bg-gray-900 px-4 py-3 font-semibold text-white transition hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <span className="flex items-center justify-center gap-2">
@@ -174,6 +157,13 @@ const [analysisResult, setAnalysisResult] = useState<any>(null);
                   "Analyze Resume"
                 )}
               </button>
+
+              {/* Developer Watermark */}
+              <div className="pt-6 border-t border-gray-100">
+                <p className="text-[10px] font-mono text-gray-400 text-center">
+                  DevCred Protocol Authored by Zohaib Ali // Verified System Instance
+                </p>
+              </div>
             </div>
           </div>
 
@@ -182,17 +172,17 @@ const [analysisResult, setAnalysisResult] = useState<any>(null);
             {analysisResult ? (
               <div className="space-y-6">
                 {/* Candidate Card */}
-                <div className="rounded-2xl bg-slate-900 border border-slate-800 p-6">
-                  <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                <div className="border border-gray-200 bg-white p-6">
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
                     Candidate Information
                   </h3>
                   <div className="flex items-end justify-between">
                     <div>
-                      <p className="text-3xl font-bold text-white">
+                      <p className="text-3xl font-bold text-gray-900">
                         {analysisResult.analysis.candidate_name}
                       </p>
                       {analysisResult.github_validation?.status === "success" && (
-                        <p className="text-sm text-slate-400 mt-2">
+                        <p className="text-sm text-gray-500 mt-2">
                           {analysisResult.github_validation.repositories_found} GitHub repositories found
                         </p>
                       )}
@@ -201,8 +191,8 @@ const [analysisResult, setAnalysisResult] = useState<any>(null);
                 </div>
 
                 {/* Skills Card */}
-                <div className="rounded-2xl bg-slate-900 border border-slate-800 p-6">
-                  <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
+                <div className="border border-gray-200 bg-white p-6">
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
                     Technical Skills
                   </h3>
                   <div className="flex flex-wrap gap-2">
@@ -211,22 +201,22 @@ const [analysisResult, setAnalysisResult] = useState<any>(null);
                         (skill: string, idx: number) => (
                           <span
                             key={idx}
-                            className="px-3 py-1 bg-slate-950 rounded-xl border border-slate-800/60 text-xs font-medium text-slate-200 hover:border-blue-500/50 transition"
+                            className="px-3 py-1 bg-gray-100 rounded-md border border-gray-200 text-xs font-medium text-gray-700"
                           >
                             {skill}
                           </span>
                         )
                       )
                     ) : (
-                      <p className="text-sm text-slate-500">No skills detected</p>
+                      <p className="text-sm text-gray-500">No skills detected</p>
                     )}
                   </div>
                 </div>
 
                 {/* Projects Card */}
                 {analysisResult.analysis.extracted_projects.length > 0 && (
-                  <div className="rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-4">
-                    <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <div className="border border-gray-200 bg-white p-6 space-y-4">
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                       Validated Projects
                     </h3>
                     <div className="space-y-3">
@@ -234,23 +224,23 @@ const [analysisResult, setAnalysisResult] = useState<any>(null);
                         (project: any, idx: number) => (
                           <div
                             key={idx}
-                            className="rounded-xl bg-slate-950 border border-slate-800 p-4 space-y-3 hover:border-slate-700 transition"
+                            className="border border-gray-200 p-4 space-y-3"
                           >
                             {/* Project Header */}
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex-1">
-                                <h4 className="font-semibold text-white text-sm">
+                                <h4 className="font-semibold text-gray-900 text-sm">
                                   {project.project_name}
                                 </h4>
                               </div>
                               {/* Status Badge */}
                               <span
-                                className={`flex-shrink-0 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap ${
+                                className={`flex-shrink-0 px-3 py-1 rounded text-xs font-semibold whitespace-nowrap ${
                                   project.verification_status === "Verified"
-                                    ? "bg-green-500/20 text-green-300 border border-green-500/30"
+                                    ? "bg-gray-900 text-white"
                                     : project.verification_status === "Tutorial Clone"
-                                    ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                                    : "bg-slate-700/50 text-slate-300 border border-slate-600/50"
+                                    ? "bg-gray-200 text-gray-700"
+                                    : "bg-gray-100 text-gray-500"
                                 }`}
                               >
                                 {project.verification_status}
@@ -258,19 +248,19 @@ const [analysisResult, setAnalysisResult] = useState<any>(null);
                             </div>
 
                             {/* Description */}
-                            <p className="text-sm text-slate-400 leading-relaxed">
+                            <p className="text-sm text-gray-500 leading-relaxed">
                               {project.resume_description}
                             </p>
 
                             {/* GitHub Repo Link */}
                             {project.matching_github_repo && (
-                              <div className="pt-2 border-t border-slate-800">
-                                <p className="text-xs text-slate-500 mb-1">Matched Repository:</p>
+                              <div className="pt-2 border-t border-gray-200">
+                                <p className="text-xs text-gray-500 mb-1">Matched Repository:</p>
                                 <a
                                   href={`https://github.com/search?q=${encodeURIComponent(project.matching_github_repo)}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-sm font-mono text-blue-400 hover:text-blue-300 transition"
+                                  className="text-sm font-mono text-gray-800 hover:underline"
                                 >
                                   {project.matching_github_repo}
                                 </a>
@@ -278,8 +268,8 @@ const [analysisResult, setAnalysisResult] = useState<any>(null);
                             )}
 
                             {/* Confidence Reasoning */}
-                            <div className="pt-2 border-t border-slate-800">
-                              <p className="text-xs text-slate-500 italic">
+                            <div className="pt-2 border-t border-gray-200">
+                              <p className="text-xs text-gray-500 italic">
                                 {project.confidence_reasoning}
                               </p>
                             </div>
@@ -292,22 +282,22 @@ const [analysisResult, setAnalysisResult] = useState<any>(null);
 
                 {/* GitHub Validation Banner */}
                 {analysisResult.github_validation?.status === "success" && (
-                  <div className="rounded-2xl bg-slate-900 border border-green-900/50 p-6">
+                  <div className="border border-gray-200 bg-white p-6">
                     <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-green-500 rounded-full" />
-                      <p className="text-sm text-green-300">
+                      <div className="w-2 h-2 bg-gray-900 rounded-full" />
+                      <p className="text-sm text-gray-700">
                         GitHub validation active:{" "}
-                        <strong>@{analysisResult.github_validation.username}</strong>
+                        <strong className="font-semibold">@{analysisResult.github_validation.username}</strong>
                       </p>
                     </div>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="rounded-2xl bg-slate-900 border border-slate-800 p-12 flex items-center justify-center min-h-96">
+              <div className="border border-gray-200 bg-white p-12 flex items-center justify-center min-h-96">
                 <div className="text-center">
-                  <Zap className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                  <p className="text-slate-400 text-sm">
+                  <ZapIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 text-sm">
                     Upload a resume to see analysis results
                   </p>
                 </div>
