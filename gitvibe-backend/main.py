@@ -50,8 +50,20 @@ GITHUB_TOKEN: str = os.getenv("GITHUB_TOKEN", "")
 GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
 REDIS_URL: str = os.getenv("REDIS_URL", "mock")
 DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./gitvibe.db")
-JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "your-secret-key")
+JWT_SECRET_KEY: str | None = os.getenv("JWT_SECRET_KEY")
 BACKEND_PORT: int = int(os.getenv("BACKEND_PORT", 8000))
+
+# --- Start Security Hardening ---
+# Ensure critical secrets are loaded from the environment.
+if not GITHUB_TOKEN:
+    print("⚠️ Warning: GITHUB_TOKEN environment variable is not set. GitHub features will be limited.")
+
+if not GEMINI_API_KEY:
+    raise ValueError("🔴 Critical: GEMINI_API_KEY environment variable must be set.")
+
+if not JWT_SECRET_KEY:
+    raise ValueError("🔴 Critical: JWT_SECRET_KEY environment variable must be set for security.")
+# --- End Security Hardening ---
 
 # ============================================================================
 # In-Memory Cache (Fallback for Mocked Redis)
@@ -135,11 +147,26 @@ app = FastAPI(
 # should be restricted to the specific frontend URL in a production environment for security.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for local development
+    allow_origins=["http://localhost:5173"],  # Restrict to frontend origin
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ============================================================================
+# Constants
+# ============================================================================
+
+# Define a 2MB file size limit to prevent memory overload from large uploads.
+MAX_FILE_SIZE = 2 * 1024 * 1024  # 2MB
+
+# Explicitly define allowed MIME types to ensure only expected file formats are processed.
+ALLOWED_CONTENT_TYPES = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+]
+
 
 # ============================================================================
 # Routes
@@ -195,27 +222,34 @@ async def parse_resume_endpoint(
     """
     import json
 
+    # --- Start Security Hardening ---
+    # 1. Content-Type Validation: Reject requests that don't match allowed MIME types.
+    if file.content_type not in ALLOWED_CONTENT_TYPES:
+        raise HTTPException(
+            status_code=415,
+            detail=f"Unsupported file format. Please upload a PDF or Word document.",
+        )
+
+    # 2. File Size Validation: Read file content and check against the size limit.
+    file_content = await file.read()
+    if len(file_content) > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail=f"File size exceeds the limit of {MAX_FILE_SIZE / (1024 * 1024)}MB.",
+        )
+        
+    if not file_content:
+        raise HTTPException(status_code=400, detail="File is empty")
+    # --- End Security Hardening ---
+
+
     # Validate file extension to ensure we only process supported document types.
     if not file.filename:
         raise HTTPException(status_code=400, detail="File name is required")
 
     file_extension = file.filename.split(".")[-1].lower()
-    supported_formats = ["pdf", "docx"]
-
-    if file_extension not in supported_formats:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unsupported file format: .{file_extension}. Supported formats: {', '.join(supported_formats)}",
-        )
 
     try:
-        # Asynchronously read the entire binary content of the uploaded file into memory.
-        # This is a crucial step where the server processes the data streamed from the client.
-        file_content = await file.read()
-
-        if not file_content:
-            raise HTTPException(status_code=400, detail="File is empty")
-
         # Step 1: Parse the resume's binary content to extract raw, unstructured text.
         # This abstracts the complexity of handling different file formats (PDF, DOCX).
         extracted_text = await parse_resume(file_content, file_extension)
@@ -240,8 +274,7 @@ async def parse_resume_endpoint(
         # repository details to validate their existence and extract key insights.
         ai_analysis = await extract_resume_analysis(extracted_text, github_metadata)
 
-        # Finally, compile and return a structured JSON response containing all the
-        # processed data, from the raw text to the final AI-generated analysis.
+        # Finally, a structured JSON response is compiled and returned with all processed data.
         return {
             "status": "success",
             "filename": file.filename,

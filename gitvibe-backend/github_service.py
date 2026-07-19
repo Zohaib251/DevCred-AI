@@ -3,7 +3,7 @@ GitHub API Service Module
 
 Provides functionality to fetch public GitHub repository data for a given user.
 """
-
+import re
 from typing import Any, Dict, List
 
 import httpx
@@ -35,9 +35,16 @@ async def fetch_user_repositories(username: str) -> List[Dict[str, Any]]:
         GitHubServiceError: If the API call fails or user is not found.
     """
     if not username or not username.strip():
-        raise GitHubServiceError("GitHub username cannot be empty")
+        raise GitHubServiceError("Invalid GitHub username provided.")
 
     username = username.strip()
+
+    # --- Start Security Hardening ---
+    # Sanitize username to prevent injection attacks.
+    # GitHub usernames may contain alphanumeric characters and hyphens.
+    if not re.match(r"^[a-zA-Z0-9\-]+$", username):
+        raise GitHubServiceError("Invalid characters in GitHub username.")
+    # --- End Security Hardening ---
 
     try:
         async with httpx.AsyncClient(timeout=GITHUB_API_TIMEOUT) as client:
@@ -52,15 +59,16 @@ async def fetch_user_repositories(username: str) -> List[Dict[str, Any]]:
                 },
             )
 
-            # Handle various HTTP responses
+            # --- Start Security Hardening ---
+            # Mask detailed internal errors with generic, ambiguous messages.
             if response.status_code == 404:
-                raise GitHubServiceError(f"GitHub user '{username}' not found")
+                # Ambiguous message: could be user not found or private.
+                raise GitHubServiceError("Could not retrieve repository data for the specified user.")
             elif response.status_code == 403:
-                raise GitHubServiceError("GitHub API rate limit exceeded or access denied")
+                raise GitHubServiceError("Access to the requested GitHub resource was denied.")
             elif response.status_code != 200:
-                raise GitHubServiceError(
-                    f"GitHub API error: HTTP {response.status_code} - {response.text}"
-                )
+                raise GitHubServiceError("An external service error occurred while fetching repository data.")
+            # --- End Security Hardening ---
 
             repositories = response.json()
 
@@ -78,10 +86,14 @@ async def fetch_user_repositories(username: str) -> List[Dict[str, Any]]:
             return metadata_list
 
     except httpx.TimeoutException:
-        raise GitHubServiceError(f"GitHub API request timed out while fetching repositories for '{username}'")
-    except httpx.RequestError as e:
-        raise GitHubServiceError(f"Failed to connect to GitHub API: {str(e)}")
-    except ValueError as e:
-        raise GitHubServiceError(f"Invalid response from GitHub API: {str(e)}")
-    except Exception as e:
-        raise GitHubServiceError(f"Unexpected error fetching GitHub repositories: {str(e)}")
+        raise GitHubServiceError("The request to the external repository service timed out.")
+    except httpx.RequestError:
+        raise GitHubServiceError("A network error occurred while connecting to the external repository service.")
+    except ValueError:
+        raise GitHubServiceError("Received an invalid response from the external repository service.")
+    except GitHubServiceError:
+        # Re-raise specific, sanitized exceptions from the check above.
+        raise
+    except Exception:
+        raise GitHubServiceError("An unexpected system error occurred while processing the repository request.")
+

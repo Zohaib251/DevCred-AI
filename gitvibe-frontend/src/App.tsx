@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // SVGs for the new icon system, replacing Lucide icons.
 const ZapIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -26,6 +26,33 @@ export default function App() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
 
+  // --- Start Security Hardening ---
+  // Block developer tools and context menu to deter casual source code inspection.
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Block F12 (developer tools)
+      if (e.key === "F12") {
+        e.preventDefault();
+      }
+      // Block Ctrl+Shift+I, Ctrl+Shift+J (developer tools)
+      if (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J")) {
+        e.preventDefault();
+      }
+      // Block Ctrl+U (view source)
+      if (e.ctrlKey && e.key === "U") {
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    // Cleanup the event listener on component unmount
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []); // Empty dependency array ensures this runs only once on mount
+  // --- End Security Hardening ---
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -44,9 +71,13 @@ export default function App() {
       const formData = new FormData();
       formData.append("file", resumeFile);
 
+      // --- Start Security Hardening ---
+      // Use environment variables for the API endpoint to avoid hardcoding URLs.
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
       const endpoint = githubUsername
-        ? `https://devcred-backend-wvpm.onrender.com/api/v1/resume/parse?github_username=${encodeURIComponent(githubUsername)}`
-        : "https://devcred-backend-wvpm.onrender.com/api/v1/resume/parse";
+        ? `${apiBaseUrl}/api/v1/resume/parse?github_username=${encodeURIComponent(githubUsername)}`
+        : `${apiBaseUrl}/api/v1/resume/parse`;
+      // --- End Security Hardening ---
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -54,7 +85,10 @@ export default function App() {
       });
 
       if (!response.ok) {
-        throw new Error(`API error: ${response.statusText}`);
+        // Use a generic error message from the backend response if available
+        const errorData = await response.json().catch(() => null);
+        const errorMessage = errorData?.detail || `API error: ${response.statusText}`;
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
@@ -68,7 +102,10 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
+    <div
+      className="min-h-screen bg-gray-50 font-sans"
+      onContextMenu={(e) => e.preventDefault()} // Disable right-click context menu
+    >
       {/* Header Banner */}
       <header className="border-b border-gray-200 bg-white sticky top-0 z-50">
         <div className="mx-auto max-w-7xl px-6 py-5">
@@ -133,7 +170,13 @@ export default function App() {
                     type="text"
                     placeholder="e.g., torvalds"
                     value={githubUsername}
-                    onChange={(e) => setGithubUsername(e.target.value)}
+                    onChange={(e) => {
+                      // --- Start Security Hardening ---
+                      // Sanitize input to allow only valid GitHub username characters.
+                      const sanitized = e.target.value.replace(/[^a-zA-Z0-9-]/g, "");
+                      setGithubUsername(sanitized);
+                      // --- End Security Hardening ---
+                    }}
                     className="flex-1 bg-transparent text-gray-900 placeholder-gray-400 outline-none text-sm"
                   />
                 </div>

@@ -173,9 +173,10 @@ async def extract_resume_analysis(resume_text: str, github_metadata: list[Dict[s
             config=config,
         )
 
-        # Extract the response text, which should be a clean JSON string.
+        # --- Start Security Hardening ---
+        # Mask detailed error messages with generic ones.
         if not response or not response.text:
-            raise AIServiceError("Empty response from Gemini API")
+            raise AIServiceError("AI service returned an empty or invalid response.")
 
         response_text = response.text.strip()
 
@@ -184,15 +185,16 @@ async def extract_resume_analysis(resume_text: str, github_metadata: list[Dict[s
             import json
 
             result = json.loads(response_text)
-        except json.JSONDecodeError as e:
-            raise AIServiceError(f"Failed to parse Gemini response as JSON: {response_text}. Error: {str(e)}")
+        except json.JSONDecodeError:
+            raise AIServiceError("Failed to decode the response from the AI service.")
 
         # Validate the parsed dictionary against our Pydantic schema to ensure all
         # required fields are present and correctly typed.
         try:
             analysis = ResumeAnalysis(**result)
-        except Exception as e:
-            raise AIServiceError(f"Response does not match expected schema: {str(e)}")
+        except Exception:
+            raise AIServiceError("The AI service response did not match the expected data structure.")
+        # --- End Security Hardening ---
 
         # Return the final, validated data structure as a dictionary.
         return {
@@ -211,7 +213,9 @@ async def extract_resume_analysis(resume_text: str, github_metadata: list[Dict[s
         }
 
     except AIServiceError:
+        # Re-raise our custom, sanitized exceptions directly.
         raise
-    except Exception as e:
-        raise AIServiceError(f"Unexpected error during resume analysis: {str(e)}")
+    except Exception:
+        # Catch any other unexpected exceptions and wrap them in a generic error.
+        raise AIServiceError("An unexpected error occurred during AI-powered resume analysis.")
 
