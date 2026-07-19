@@ -1,94 +1,42 @@
-# Environment Variables
+# === GitVibe Repository Ignore Rules ===
+
+# 1. ISOLATE ENVIRONMENT VARIABLES & SECRETS
+# Explicitly block standard local environment tracking files to prevent public keys from hitting the web.
 .env
 .env.local
 .env.*.local
 
-# Python Virtual Environment
-.venv/
-venv/
-env/
-ENV/
-.pyenv
-
-# Python Compiled Files
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Database Files
-*.db
-*.sqlite
-*.sqlite3
-gitvibe.db
+# 2. OMIT PYTHON BACKEND METADATA & VIRTUAL RUNTIMES
+# Block local compilation engines, cache bytes, and package setup virtual environments within 'gitvibe-backend/'.
+gitvibe-backend/.venv/
+gitvibe-backend/venv/
+gitvibe-backend/ENV/
+gitvibe-backend/__pycache__/
+gitvibe-backend/*.pyc
+gitvibe-backend/*.pyo
+gitvibe-backend/*.pyd
+gitvibe-backend/.pytest_cache/
+gitvibe-backend/.db
 gitvibe-backend/*.db
+gitvibe-backend/gitvibe.db
 
-# Frontend Build & Dependencies
-node_modules/
+# 3. DROPMIN FRONTEND DEPENDENCIES & BUILD TARGETS
+# Exclude compiled static bundles and local node module dependencies inside 'gitvibe-frontend/'.
 gitvibe-frontend/node_modules/
 gitvibe-frontend/dist/
 gitvibe-frontend/build/
+gitvibe-frontend/.vite/
+gitvibe-frontend/*.log
+gitvibe-frontend/npm-debug.log*
+gitvibe-frontend/yarn-debug.log*
+gitvibe-frontend/yarn-error.log*
 
-# IDE & Editor Settings
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-.project
-.pydevproject
-.settings/
-
-# Logs
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# OS Files
+# 4. REMOVE SYSTEM META & DOCUMENTATION DISK BLOCKS
+# Instruct the index tracker to ignore hidden desktop indexing metadata along with local text guide parameters.
 .DS_Store
 Thumbs.db
-.env.vault
-
-# Cache Files
-.cache/
-.pytest_cache/
-.mypy_cache/
-.coverage
-htmlcov/
-
-# Temporary Files
-*.tmp
-*.temp
-*.bak
-
-# Dependencies Lock Files (optional - uncomment if using lockfiles)
-# yarn.lock
-# package-lock.json
-
-# IDE Generated
-.vscode/settings.json
-.vscode/launch.json
-
-# Txt file
 deploy.txt
 report.txt
-instruction.txt
+
+# Additional common ignores
+*.log
