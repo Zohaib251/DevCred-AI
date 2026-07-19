@@ -73,10 +73,9 @@ export default function App() {
 
       // --- Start Security Hardening ---
       // Use environment variables for the API endpoint to avoid hardcoding URLs.
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
       const endpoint = githubUsername
-        ? `${apiBaseUrl}/api/v1/resume/parse?github_username=${encodeURIComponent(githubUsername)}`
-        : `${apiBaseUrl}/api/v1/resume/parse`;
+        ? `https://devcred-backend-wvpm.onrender.com/api/v1/resume/parse?github_username=${encodeURIComponent(githubUsername)}`
+        : "https://devcred-backend-wvpm.onrender.com/api/v1/resume/parse";
       // --- End Security Hardening ---
 
       const response = await fetch(endpoint, {
