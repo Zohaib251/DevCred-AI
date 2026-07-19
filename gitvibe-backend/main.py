@@ -147,7 +147,7 @@ app = FastAPI(
 # should be restricted to the specific frontend URL in a production environment for security.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Restrict to frontend origin
+    allow_origins=["*"],  # Allow all origins during cloud migration
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
